@@ -1,5 +1,6 @@
 package de.hawhh.informatik.sml.kino.werkzeuge.platzverkauf;
 
+import java.util.HashSet;
 import java.util.Set;
 
 import javafx.scene.layout.Pane;
@@ -53,17 +54,16 @@ public class PlatzVerkaufsWerkzeug {
 	private void registriereUIAktionen() {
 
 		// TO SHOW
-		_ui.getVerkaufenButton().setOnAction(e -> {			
-			
-					
+		_ui.getVerkaufenButton().setOnAction(e -> {
+
 			System.out.println("You clicked the Verkaufen button");
 			Abrechnungswerkzeug abrechnung = new Abrechnungswerkzeug();
 			abrechnung.set_preis(_preisFuerAuswahl);
 			abrechnung.aktivieren();
 			if (!abrechnung.properly()) {
-				stornierePlaetze(_vorstellung);				
-			}else {
-				verkaufePlaetze(_vorstellung);	
+				stornierePlaetze(_vorstellung);
+			} else {
+				verkaufePlaetze(_vorstellung);
 			}
 		});
 
@@ -81,6 +81,9 @@ public class PlatzVerkaufsWerkzeug {
 	private void reagiereAufNeuePlatzAuswahl(Set<Platz> plaetze) {
 		_ui.getVerkaufenButton().setDisable(!istVerkaufenMoeglich(plaetze));
 		_ui.getStornierenButton().setDisable(!istStornierenMoeglich(plaetze));
+		if (_vorstellung != null) {// Merke in Vorstellung
+			_vorstellung.markierePlaetze(plaetze);
+		}
 		aktualisierePreisanzeige(plaetze);
 	}
 
@@ -90,7 +93,7 @@ public class PlatzVerkaufsWerkzeug {
 	private void aktualisierePreisanzeige(Set<Platz> plaetze) {
 
 		if (istVerkaufenMoeglich(plaetze)) {
-			Geldbetrag preis = _vorstellung.getPreisFuerPlaetze(plaetze);			
+			Geldbetrag preis = _vorstellung.getPreisFuerPlaetze(plaetze);
 			_ui.getPreisLabel().setText("Gesamtpreis: " + preis.getStringrepräsentation() + " Euro");
 			_preisFuerAuswahl = preis;
 		} else {
@@ -129,16 +132,35 @@ public class PlatzVerkaufsWerkzeug {
 		if (_vorstellung != null) {
 			Kinosaal saal = _vorstellung.getKinosaal();
 			_ui.getPlatzplan().setAnzahlPlaetze(saal.getAnzahlReihen(), saal.getAnzahlSitzeProReihe());
+			Set<Platz> ausgewaehltePlaetze = new HashSet<>();
 
 			for (Platz platz : saal.getPlaetze()) {
+
 				if (_vorstellung.istPlatzVerkauft(platz)) {
 					_ui.getPlatzplan().markierePlatzAlsVerkauft(platz);
+					
+				} else if (_vorstellung.istAusgewaehlt(platz)) {
+					_ui.getPlatzplan().getAusgewaehltePlaetze().add(platz);
+					// gucken ob PLätze markiert wurden
+					_ui.getPlatzplan().markierePlatzAlsAusgewaehlt(platz);
+					// adden um zu überprüfen ob man verkaufen stornieren o.ä kann
+					ausgewaehltePlaetze.add(platz);
+				} else {
+					_ui.getPlatzplan().markierePlatzAlsFrei(platz);
 				}
+				
+			} // for
+
+			if (ausgewaehltePlaetze != null) {				
+				reagiereAufNeuePlatzAuswahl(ausgewaehltePlaetze);
 			}
+
 		} else {
 			_ui.getPlatzplan().setAnzahlPlaetze(0, 0);
 		}
 	}
+
+
 
 	/**
 	 * Verkauft die ausgewählten Plaetze.

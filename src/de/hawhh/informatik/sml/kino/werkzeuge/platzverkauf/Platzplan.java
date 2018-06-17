@@ -184,6 +184,22 @@ class Platzplan extends GridPane
         informiereSelectionListener(_ausgewaehltePlaetze);
     }
 
+    /**
+     * Markiert den angegebenen Platz als ausgewählt.
+     * 
+     * @param platz
+     *            der Platz.
+     * 
+     * @require platz != null
+     */
+    public void markierePlatzAlsAusgewaehlt(Platz platz)
+    {
+        assert platz != null : "Vorbedingung verletzt: platz != null";
+        _buttons[platz.getReihenNr()][platz.getSitzNr()].setAusgewaehlt(true);
+        _ausgewaehltePlaetze.add(platz);
+//        repaint();
+    }
+    
     private void addGrowableRowConstraint()
     {
         RowConstraints rowC = new RowConstraints();
